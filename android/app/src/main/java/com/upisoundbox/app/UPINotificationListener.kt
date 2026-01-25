@@ -53,12 +53,12 @@ class UPINotificationListener : NotificationListenerService() {
         
         val packageName = sbn.packageName ?: return
         
-        // Log all notifications for debugging
-        logDebug("Notification from: $packageName")
+        // Log all notifications for debugging (first 50 chars of title)
+        val debugTitle = sbn.notification?.extras?.getCharSequence("android.title")?.toString()?.take(50) ?: ""
+        logDebug("All notifications: $packageName - $debugTitle")
         
         // Only process notifications from UPI apps
         if (!UPI_PACKAGES.contains(packageName)) {
-            logDebug("Package not in UPI apps list")
             return
         }
         

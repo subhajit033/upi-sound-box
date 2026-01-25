@@ -73,21 +73,36 @@ export default function HomeScreen() {
   const handleNotification = useCallback(
     async (payload: NotificationPayload) => {
       try {
-        console.log("Notification received:", payload);
+        console.log("=== NOTIFICATION RECEIVED ===");
+        console.log("Payload:", JSON.stringify(payload, null, 2));
 
         // Parse the notification
         const parsed = parseNotification(payload);
+        console.log("Parsed:", JSON.stringify(parsed, null, 2));
+
         setLastNotification(parsed);
         setNotificationCount((prev) => prev + 1);
 
         // Speak amount if valid
         if (parsed.amount !== null && parsed.isSuccessful) {
+          console.log(
+            "Speaking amount:",
+            parsed.amount,
+            "in language:",
+            language,
+          );
           await speakAmount(parsed.amount, language);
+          console.log("TTS completed");
+        } else {
+          console.log(
+            "Not speaking - amount:",
+            parsed.amount,
+            "isSuccessful:",
+            parsed.isSuccessful,
+          );
         }
       } catch (error) {
-        if (__DEV__) {
-          console.error("Error handling notification:", error);
-        }
+        console.error("!!! ERROR handling notification:", error);
       }
     },
     [language],
