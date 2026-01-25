@@ -129,12 +129,14 @@ export default function HomeScreen() {
 
   // Initialize notification listener context on mount
   useEffect(() => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       const { UPILinkModule } = NativeModules;
       if (UPILinkModule && UPILinkModule.initializeListener) {
         UPILinkModule.initializeListener()
-          .then(() => console.log('Notification listener context initialized'))
-          .catch((error: Error) => console.error('Failed to initialize listener:', error));
+          .then(() => console.log("Notification listener context initialized"))
+          .catch((error: Error) =>
+            console.error("Failed to initialize listener:", error),
+          );
       }
     }
   }, []);
@@ -270,7 +272,7 @@ export default function HomeScreen() {
         />
 
         {/* Last Notification Display */}
-        <LastNotificationCard notification={lastNotification} />
+        {/* <LastNotificationCard notification={lastNotification} /> */}
 
         {/* Test Controls */}
         <TestControls

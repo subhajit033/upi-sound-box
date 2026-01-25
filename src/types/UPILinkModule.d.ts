@@ -3,7 +3,7 @@
  * This module provides access to Android notification listener service functionality.
  */
 
-import { NativeModule } from 'react-native';
+import { NativeModule } from "react-native";
 
 /**
  * UPI App information returned by native module
@@ -66,7 +66,7 @@ export interface UPILinkModuleInterface extends NativeModule {
   initializeListener(): Promise<boolean>;
 }
 
-declare module 'react-native' {
+declare module "react-native" {
   interface NativeModulesStatic {
     UPILinkModule: UPILinkModuleInterface;
   }
