@@ -1,34 +1,41 @@
 /**
  * UPI Soundbox - Main Screen
- * 
+ *
  * The primary interface for the UPI Soundbox application.
  * Handles notification listening, permission management, and TTS controls.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    DeviceEventEmitter,
-    Platform,
-    Pressable,
-    ScrollView,
-    Text,
-    View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  ActivityIndicator,
+  DeviceEventEmitter,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useNotificationPermission } from '../../src/hooks/useNotificationPermission';
-import type { Language, NotificationPayload, ParsedNotification } from '../../src/types';
-import { SOURCE_NAMES, SUPPORTED_LANGUAGES } from '../../src/types';
-import { getLanguage, setLanguage as saveLanguage } from '../../src/utils/languageManager';
-import { parseNotification } from '../../src/utils/notificationParser';
-import { speakAmount, stopSpeech } from '../../src/utils/ttsEngine';
+import { useNotificationPermission } from "../../src/hooks/useNotificationPermission";
+import type {
+  Language,
+  NotificationPayload,
+  ParsedNotification,
+} from "../../src/types";
+import { SOURCE_NAMES, SUPPORTED_LANGUAGES } from "../../src/types";
+import {
+  getLanguage,
+  setLanguage as saveLanguage,
+} from "../../src/utils/languageManager";
+import { parseNotification } from "../../src/utils/notificationParser";
+import { speakAmount, stopSpeech } from "../../src/utils/ttsEngine";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
-const UPI_MESSAGE_EVENT = 'onUPIMessageReceived';
+const UPI_MESSAGE_EVENT = "onUPIMessageReceived";
 
 // ============================================================================
 // MAIN COMPONENT
@@ -45,11 +52,12 @@ export default function HomeScreen() {
   } = useNotificationPermission();
 
   // Language state
-  const [language, setLanguageState] = useState<Language>('en-IN');
+  const [language, setLanguageState] = useState<Language>("en-IN");
   const [isLanguageLoading, setIsLanguageLoading] = useState(true);
 
   // Last notification state
-  const [lastNotification, setLastNotification] = useState<ParsedNotification | null>(null);
+  const [lastNotification, setLastNotification] =
+    useState<ParsedNotification | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
 
   // Test button state
@@ -65,9 +73,7 @@ export default function HomeScreen() {
   const handleNotification = useCallback(
     async (payload: NotificationPayload) => {
       try {
-       
-          console.log('Notification received:', payload);
-       
+        console.log("Notification received:", payload);
 
         // Parse the notification
         const parsed = parseNotification(payload);
@@ -80,11 +86,11 @@ export default function HomeScreen() {
         }
       } catch (error) {
         if (__DEV__) {
-          console.error('Error handling notification:', error);
+          console.error("Error handling notification:", error);
         }
       }
     },
-    [language]
+    [language],
   );
 
   /**
@@ -96,7 +102,7 @@ export default function HomeScreen() {
       await saveLanguage(newLanguage);
     } catch (error) {
       if (__DEV__) {
-        console.error('Error saving language:', error);
+        console.error("Error saving language:", error);
       }
     }
   }, []);
@@ -113,7 +119,7 @@ export default function HomeScreen() {
         setLanguageState(savedLanguage);
       } catch (error) {
         if (__DEV__) {
-          console.error('Error loading language:', error);
+          console.error("Error loading language:", error);
         }
       } finally {
         setIsLanguageLoading(false);
@@ -125,16 +131,21 @@ export default function HomeScreen() {
 
   // Setup notification event listener
   useEffect(() => {
-    if (Platform.OS !== 'android') {
+    if (Platform.OS !== "android") {
       return;
     }
 
+    console.log("Setting up notification listener...");
+
     const subscription = DeviceEventEmitter.addListener(
       UPI_MESSAGE_EVENT,
-      handleNotification
+      handleNotification,
     );
 
+    console.log("Notification listener set up successfully");
+
     return () => {
+      console.log("Removing notification listener");
       subscription.remove();
     };
   }, [handleNotification]); // Recreate when handler changes
@@ -149,21 +160,21 @@ export default function HomeScreen() {
     try {
       // Test with ₹500
       await speakAmount(500, language);
-      
+
       // Create mock notification for display
       const mockNotification: ParsedNotification = {
         amount: 500,
-        currency: 'INR',
-        sender: 'Test User',
-        source: 'phonepe',
-        rawText: '₹500 received from Test User',
+        currency: "INR",
+        sender: "Test User",
+        source: "phonepe",
+        rawText: "₹500 received from Test User",
         isSuccessful: true,
         parsedAt: Date.now(),
       };
       setLastNotification(mockNotification);
     } catch (error) {
       if (__DEV__) {
-        console.error('Error testing TTS:', error);
+        console.error("Error testing TTS:", error);
       }
     } finally {
       setTimeout(() => setIsTestingTTS(false), 1000);
@@ -203,19 +214,21 @@ export default function HomeScreen() {
         {/* Header */}
         <View className="mb-8 items-center">
           <Text className="text-3xl font-bold text-gray-800">UPI Soundbox</Text>
-          <Text className="mt-1 text-gray-500">Payment Notification Reader</Text>
+          <Text className="mt-1 text-gray-500">
+            Payment Notification Reader
+          </Text>
         </View>
 
         {/* Status Card */}
-        <StatusCard 
-          hasPermission={hasPermission} 
+        <StatusCard
+          hasPermission={hasPermission}
           isChecking={isChecking}
           notificationCount={notificationCount}
         />
 
         {/* Permission Button - Only show if no permission */}
         {!hasPermission && (
-          <PermissionButton 
+          <PermissionButton
             onPress={requestPermission}
             onRecheck={recheckPermission}
             isChecking={isChecking}
@@ -271,23 +284,23 @@ function StatusCard({
           ) : (
             <View
               className={`h-3 w-3 rounded-full ${
-                hasPermission ? 'bg-green-500' : 'bg-red-500'
+                hasPermission ? "bg-green-500" : "bg-red-500"
               }`}
             />
           )}
           <Text
             className={`ml-3 text-base font-semibold ${
-              hasPermission ? 'text-green-600' : 'text-red-600'
+              hasPermission ? "text-green-600" : "text-red-600"
             }`}
           >
             {isChecking
-              ? 'Checking...'
+              ? "Checking..."
               : hasPermission
-                ? 'Service Active'
-                : 'Service Inactive'}
+                ? "Service Active"
+                : "Service Inactive"}
           </Text>
         </View>
-        
+
         {hasPermission && notificationCount > 0 && (
           <View className="rounded-full bg-blue-100 px-3 py-1">
             <Text className="text-sm font-medium text-blue-600">
@@ -324,21 +337,21 @@ function PermissionButton({
         onPress={onPress}
         disabled={isChecking}
         className={`rounded-xl bg-blue-500 px-6 py-4 ${
-          isChecking ? 'opacity-60' : 'active:bg-blue-600'
+          isChecking ? "opacity-60" : "active:bg-blue-600"
         }`}
       >
         <Text className="text-center text-lg font-semibold text-white">
           Grant Notification Access
         </Text>
       </Pressable>
-      
+
       <Pressable
         onPress={onRecheck}
         disabled={isChecking}
         className="mt-2 py-2"
       >
         <Text className="text-center text-sm text-blue-500">
-          {isChecking ? 'Checking...' : 'Already granted? Tap to refresh'}
+          {isChecking ? "Checking..." : "Already granted? Tap to refresh"}
         </Text>
       </Pressable>
     </View>
@@ -366,7 +379,7 @@ function LanguageSelector({
       <Text className="mb-3 text-base font-semibold text-gray-700">
         Announcement Language
       </Text>
-      
+
       <View className="flex-row flex-wrap gap-2">
         {displayLanguages.map((lang) => (
           <Pressable
@@ -374,13 +387,13 @@ function LanguageSelector({
             onPress={() => onLanguageChange(lang.code)}
             className={`rounded-lg px-4 py-2 ${
               currentLanguage === lang.code
-                ? 'bg-blue-500'
-                : 'border border-gray-200 bg-gray-50'
+                ? "bg-blue-500"
+                : "border border-gray-200 bg-gray-50"
             }`}
           >
             <Text
               className={`text-sm font-medium ${
-                currentLanguage === lang.code ? 'text-white' : 'text-gray-700'
+                currentLanguage === lang.code ? "text-white" : "text-gray-700"
               }`}
             >
               {lang.nativeName}
@@ -390,10 +403,7 @@ function LanguageSelector({
       </View>
 
       {!showAll && SUPPORTED_LANGUAGES.length > 4 && (
-        <Pressable
-          onPress={() => setShowAll(true)}
-          className="mt-3"
-        >
+        <Pressable onPress={() => setShowAll(true)} className="mt-3">
           <Text className="text-sm text-blue-500">
             Show all {SUPPORTED_LANGUAGES.length} languages
           </Text>
@@ -401,13 +411,8 @@ function LanguageSelector({
       )}
 
       {showAll && (
-        <Pressable
-          onPress={() => setShowAll(false)}
-          className="mt-3"
-        >
-          <Text className="text-sm text-gray-500">
-            Show less
-          </Text>
+        <Pressable onPress={() => setShowAll(false)} className="mt-3">
+          <Text className="text-sm text-gray-500">Show less</Text>
         </Pressable>
       )}
     </View>
@@ -435,7 +440,7 @@ function LastNotificationCard({
     );
   }
 
-  const formattedAmount = notification.amount?.toLocaleString('en-IN', {
+  const formattedAmount = notification.amount?.toLocaleString("en-IN", {
     minimumFractionDigits: notification.amount % 1 !== 0 ? 2 : 0,
     maximumFractionDigits: 2,
   });
@@ -514,8 +519,8 @@ function TestControls({
           disabled={isTesting}
           className={`flex-1 flex-row items-center justify-center rounded-lg border-2 px-4 py-3 ${
             isTesting
-              ? 'border-green-500 bg-green-50'
-              : 'border-gray-200 bg-gray-50 active:bg-gray-100'
+              ? "border-green-500 bg-green-50"
+              : "border-gray-200 bg-gray-50 active:bg-gray-100"
           }`}
         >
           {isTesting ? (
@@ -525,10 +530,10 @@ function TestControls({
           )}
           <Text
             className={`ml-2 font-medium ${
-              isTesting ? 'text-green-600' : 'text-gray-700'
+              isTesting ? "text-green-600" : "text-gray-700"
             }`}
           >
-            {isTesting ? 'Playing...' : 'Test TTS'}
+            {isTesting ? "Playing..." : "Test TTS"}
           </Text>
         </Pressable>
 
@@ -555,7 +560,10 @@ function HelpSection() {
 
       <View className="space-y-2">
         <HelpItem number={1} text="Grant notification access above" />
-        <HelpItem number={2} text="Receive a UPI payment (PhonePe, GPay, Paytm, BHIM)" />
+        <HelpItem
+          number={2}
+          text="Receive a UPI payment (PhonePe, GPay, Paytm, BHIM)"
+        />
         <HelpItem number={3} text="Hear the amount announced automatically" />
       </View>
 
@@ -590,7 +598,7 @@ function HelpItem({ number, text }: { number: number; text: string }) {
 function getTimeAgo(timestamp: number): string {
   const seconds = Math.floor((Date.now() - timestamp) / 1000);
 
-  if (seconds < 60) return 'Just now';
+  if (seconds < 60) return "Just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;

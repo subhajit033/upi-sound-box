@@ -1,8 +1,11 @@
 package com.upisoundbox.app
 
+import android.os.Handler
+import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import android.widget.Toast
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.modules.core.DeviceEventManagerModule
@@ -43,37 +46,72 @@ class UPINotificationListener : NotificationListenerService() {
      */
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         // Early return if notification is null
-        if (sbn == null) return
+        if (sbn == null) {
+            logDebug("Received null notification")
+            return
+        }
         
         val packageName = sbn.packageName ?: return
         
+        // Log all notifications for debugging
+        logDebug("Notification from: $packageName")
+        
         // Only process notifications from UPI apps
-        if (!UPI_PACKAGES.contains(packageName)) return
+        if (!UPI_PACKAGES.contains(packageName)) {
+            logDebug("Package not in UPI apps list")
+            return
+        }
         
         try {
-            val notification = sbn.notification ?: return
-            val extras = notification.extras ?: return
+            val notification = sbn.notification
+            if (notification == null) {
+                logDebug("Notification object is null")
+                return
+            }
+            
+            val extras = notification.extras
+            if (extras == null) {
+                logDebug("Extras bundle is null")
+                return
+            }
             
             // Extract notification content with null safety
             val title = extras.getCharSequence("android.title")?.toString() ?: ""
             val text = extras.getCharSequence("android.text")?.toString() ?: ""
             
             // Prefer bigText for longer notification content (contains full amount details)
-            val bigText = extras.getCharSequence("android.bigText")?.toString() ?: text
+            val bigText = extras.getCharSequence("android.bigText")?.toString() ?: ""
+            
+            // Also check subText for additional info
+            val subText = extras.getCharSequence("android.subText")?.toString() ?: ""
             
             // Use the most detailed text available
-            val notificationText = if (bigText.isNotEmpty()) bigText else text
+            val notificationText = when {
+                bigText.isNotEmpty() -> bigText
+                text.isNotEmpty() -> text
+                else -> subText
+            }
+            
+            logDebug("Title: $title")
+            logDebug("Text: $text")
+            logDebug("BigText: $bigText")
+            logDebug("SubText: $subText")
+            logDebug("Final text: $notificationText")
             
             // Skip empty notifications
-            if (title.isEmpty() && notificationText.isEmpty()) return
+            if (title.isEmpty() && notificationText.isEmpty()) {
+                logDebug("Both title and text are empty, skipping")
+                return
+            }
             
-            logDebug("UPI Notification - Package: $packageName, Title: $title")
+            logDebug("Processing UPI Notification - Package: $packageName")
             
             // Send event to React Native
             sendEventToReactNative(packageName, title, notificationText)
             
         } catch (e: Exception) {
             logDebug("Error processing notification: ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -97,9 +135,22 @@ class UPINotificationListener : NotificationListenerService() {
         try {
             val context = reactContext
             
+            logDebug("Attempting to send event to React Native")
+            logDebug("React context available: ${context != null}")
+            
+            // Show toast for debugging (even if React context is not available)
+            if (BuildConfig.DEBUG) {
+                showToast("UPI Notification: $packageName")
+            }
+            
             // Check if React Native is initialized and has active catalyst instance
-            if (context == null || !context.hasActiveReactInstance()) {
-                logDebug("React context not available - app may not be running")
+            if (context == null) {
+                logDebug("React context is null - app may not be fully initialized")
+                return
+            }
+            
+            if (!context.hasActiveReactInstance()) {
+                logDebug("No active React instance - app may be in background")
                 return
             }
             
@@ -111,6 +162,8 @@ class UPINotificationListener : NotificationListenerService() {
                 putDouble("timestamp", System.currentTimeMillis().toDouble())
             }
             
+            logDebug("Payload created: packageName=$packageName, title=$title")
+            
             // Emit event to JavaScript
             context
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
@@ -121,6 +174,18 @@ class UPINotificationListener : NotificationListenerService() {
         } catch (e: Exception) {
             // Fail silently - React Native might not be running
             logDebug("Failed to emit event: ${e.message}")
+            e.printStackTrace()
+        }
+    }
+    
+    /**
+     * Shows a toast message on the UI thread (for debugging).
+     * 
+     * @param message The message to show
+     */
+    private fun showToast(message: String) {
+        Handler(Looper.getMainLooper()).post {
+            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
         }
     }
 
