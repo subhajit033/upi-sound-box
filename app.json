@@ -1,17 +1,18 @@
 {
   "expo": {
-    "name": "native-real-state",
-    "slug": "native-real-state",
+    "name": "UPI Soundbox",
+    "slug": "upi-soundbox",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nativerealstate",
+    "scheme": "upisoundbox",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false
     },
     "android": {
+      "package": "com.upisoundbox.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
