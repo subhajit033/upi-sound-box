@@ -1,37 +1,38 @@
 /**
  * UPI Soundbox Service
- * 
+ *
  * Main integration module that connects the notification listener,
  * parser, and TTS engine. This is the core service that makes the
  * soundbox functionality work.
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import { useCallback, useEffect, useState } from "react";
+import { NativeEventEmitter, NativeModules, Platform } from "react-native";
 import type {
-    CleanupFunction,
-    Language,
-    NotificationPayload,
-    ParsedNotification
-} from '../types';
-import { getSettings } from '../utils/languageManager';
-import { parseNotification } from '../utils/notificationParser';
-import { speakAmount, stopSpeech } from '../utils/ttsEngine';
+  CleanupFunction,
+  Language,
+  NotificationPayload,
+  ParsedNotification,
+} from "../types";
+import { getSettings } from "../utils/languageManager";
+import { parseNotification } from "../utils/notificationParser";
+import { speakAmount, stopSpeech } from "../utils/ttsEngine";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 /** Event name from native module */
-const UPI_MESSAGE_EVENT = 'onUPIMessageReceived';
+const UPI_MESSAGE_EVENT = "onUPIMessageReceived";
 
 /** Get native module */
 const { UPILinkModule } = NativeModules;
 
 /** Event emitter for native events */
-const eventEmitter = Platform.OS === 'android' && UPILinkModule
-  ? new NativeEventEmitter(UPILinkModule)
-  : null;
+const eventEmitter =
+  Platform.OS === "android" && UPILinkModule
+    ? new NativeEventEmitter(UPILinkModule)
+    : null;
 
 // ============================================================================
 // SERVICE STATE
@@ -60,36 +61,36 @@ const state: ServiceState = {
 /**
  * Starts the UPI Soundbox service.
  * Begins listening for UPI notifications and announcing amounts.
- * 
+ *
  * @param onNotification - Optional callback for each processed notification
  * @returns Cleanup function to stop the service
- * 
+ *
  * @example
  * ```typescript
  * // Start the service
  * const stop = startSoundbox((notification) => {
  *   console.log('Received:', notification.amount);
  * });
- * 
+ *
  * // Later, stop the service
  * stop();
  * ```
  */
 export function startSoundbox(
-  onNotification?: (parsed: ParsedNotification) => void
+  onNotification?: (parsed: ParsedNotification) => void,
 ): CleanupFunction {
-  if (Platform.OS !== 'android') {
-    console.warn('UPI Soundbox is only available on Android');
+  if (Platform.OS !== "android") {
+    console.warn("UPI Soundbox is only available on Android");
     return () => {};
   }
 
   if (state.isRunning) {
-    console.warn('Soundbox is already running');
+    console.warn("Soundbox is already running");
     return () => stopSoundbox();
   }
 
   if (!eventEmitter) {
-    console.error('Native module not available');
+    console.error("Native module not available");
     return () => {};
   }
 
@@ -99,14 +100,12 @@ export function startSoundbox(
   // Subscribe to native events
   state.subscription = eventEmitter.addListener(
     UPI_MESSAGE_EVENT,
-    handleNotification
+    handleNotification,
   );
 
   state.isRunning = true;
-  
-  if (__DEV__) {
-    console.log('UPI Soundbox started');
-  }
+
+  console.log("UPI Soundbox started");
 
   return () => stopSoundbox();
 }
@@ -123,18 +122,16 @@ export function stopSoundbox(): void {
 
   state.isRunning = false;
   state.onNotificationCallback = null;
-  
+
   // Stop any ongoing speech
   stopSpeech();
 
-  if (__DEV__) {
-    console.log('UPI Soundbox stopped');
-  }
+  console.log("UPI Soundbox stopped");
 }
 
 /**
  * Checks if the soundbox service is currently running.
- * 
+ *
  * @returns true if running
  */
 export function isRunning(): boolean {
@@ -143,7 +140,7 @@ export function isRunning(): boolean {
 
 /**
  * Gets the last processed notification.
- * 
+ *
  * @returns Last notification or null
  */
 export function getLastNotification(): ParsedNotification | null {
@@ -152,7 +149,7 @@ export function getLastNotification(): ParsedNotification | null {
 
 /**
  * Gets the total count of processed notifications.
- * 
+ *
  * @returns Notification count
  */
 export function getNotificationCount(): number {
@@ -169,13 +166,11 @@ export function getNotificationCount(): number {
  */
 async function handleNotification(payload: NotificationPayload): Promise<void> {
   try {
-    if (__DEV__) {
-      console.log('Received notification:', payload);
-    }
+    console.log("Received notification:", payload);
 
     // Parse the notification
     const parsed = parseNotification(payload);
-    
+
     // Update state
     state.lastNotification = parsed;
     state.notificationCount++;
@@ -185,35 +180,33 @@ async function handleNotification(payload: NotificationPayload): Promise<void> {
 
     // Check if soundbox is enabled
     if (!settings.isEnabled) {
-      if (__DEV__) {
-        console.log('Soundbox disabled, skipping announcement');
-      }
+      console.log("Soundbox disabled, skipping announcement");
+
       return;
     }
 
     // Check if we have a valid amount
     if (parsed.amount === null) {
-      if (__DEV__) {
-        console.log('No valid amount found, skipping');
-      }
+      console.log("No valid amount found, skipping");
+
       notifyCallback(parsed);
       return;
     }
 
     // Check minimum amount threshold
     if (parsed.amount < settings.minimumAmount) {
-      if (__DEV__) {
-        console.log(`Amount ${parsed.amount} below minimum ${settings.minimumAmount}`);
-      }
+      console.log(
+        `Amount ${parsed.amount} below minimum ${settings.minimumAmount}`,
+      );
+
       notifyCallback(parsed);
       return;
     }
 
     // Check if this is a successful payment
     if (!parsed.isSuccessful) {
-      if (__DEV__) {
-        console.log('Not a successful payment, skipping');
-      }
+      console.log("Not a successful payment, skipping");
+
       notifyCallback(parsed);
       return;
     }
@@ -226,10 +219,9 @@ async function handleNotification(payload: NotificationPayload): Promise<void> {
 
     // Notify callback
     notifyCallback(parsed);
-
   } catch (error) {
     if (__DEV__) {
-      console.error('Error handling notification:', error);
+      console.error("Error handling notification:", error);
     }
   }
 }
@@ -243,7 +235,7 @@ function notifyCallback(parsed: ParsedNotification): void {
       state.onNotificationCallback(parsed);
     } catch (error) {
       if (__DEV__) {
-        console.error('Notification callback error:', error);
+        console.error("Notification callback error:", error);
       }
     }
   }
@@ -255,11 +247,11 @@ function notifyCallback(parsed: ParsedNotification): void {
 
 /**
  * Checks if the notification listener service is enabled.
- * 
+ *
  * @returns true if enabled
  */
 export async function isNotificationAccessEnabled(): Promise<boolean> {
-  if (Platform.OS !== 'android' || !UPILinkModule) {
+  if (Platform.OS !== "android" || !UPILinkModule) {
     return false;
   }
 
@@ -267,7 +259,7 @@ export async function isNotificationAccessEnabled(): Promise<boolean> {
     return await UPILinkModule.isNotificationServiceEnabled();
   } catch (error) {
     if (__DEV__) {
-      console.error('Error checking notification access:', error);
+      console.error("Error checking notification access:", error);
     }
     return false;
   }
@@ -276,11 +268,11 @@ export async function isNotificationAccessEnabled(): Promise<boolean> {
 /**
  * Opens the notification listener settings screen.
  * User needs to manually enable access for this app.
- * 
+ *
  * @returns true if settings opened successfully
  */
 export async function openNotificationSettings(): Promise<boolean> {
-  if (Platform.OS !== 'android' || !UPILinkModule) {
+  if (Platform.OS !== "android" || !UPILinkModule) {
     return false;
   }
 
@@ -288,7 +280,7 @@ export async function openNotificationSettings(): Promise<boolean> {
     return await UPILinkModule.openNotificationSettings();
   } catch (error) {
     if (__DEV__) {
-      console.error('Error opening notification settings:', error);
+      console.error("Error opening notification settings:", error);
     }
     return false;
   }
@@ -304,11 +296,11 @@ interface UPIAppInfo {
 
 /**
  * Gets the list of installed UPI apps.
- * 
+ *
  * @returns Array of installed app info
  */
 export async function getInstalledUPIApps(): Promise<UPIAppInfo[]> {
-  if (Platform.OS !== 'android' || !UPILinkModule) {
+  if (Platform.OS !== "android" || !UPILinkModule) {
     return [];
   }
 
@@ -316,7 +308,7 @@ export async function getInstalledUPIApps(): Promise<UPIAppInfo[]> {
     return await UPILinkModule.getInstalledUPIApps();
   } catch (error) {
     if (__DEV__) {
-      console.error('Error getting installed UPI apps:', error);
+      console.error("Error getting installed UPI apps:", error);
     }
     return [];
   }
@@ -329,30 +321,30 @@ export async function getInstalledUPIApps(): Promise<UPIAppInfo[]> {
 /**
  * Simulates a UPI notification for testing purposes.
  * Only works in development mode.
- * 
+ *
  * @param amount - Amount to simulate
  * @param source - UPI app source
  */
 export async function simulateNotification(
   amount: number,
-  source: 'phonepe' | 'gpay' | 'paytm' | 'bhim' = 'phonepe'
+  source: "phonepe" | "gpay" | "paytm" | "bhim" = "phonepe",
 ): Promise<void> {
   if (!__DEV__) {
-    console.warn('simulateNotification only works in development mode');
+    console.warn("simulateNotification only works in development mode");
     return;
   }
 
   const packageMap = {
-    phonepe: 'com.phonepe.app',
-    gpay: 'com.google.android.apps.nbu.paisa.user',
-    paytm: 'net.one97.paytm',
-    bhim: 'in.org.npci.upiapp',
+    phonepe: "com.phonepe.app",
+    gpay: "com.google.android.apps.nbu.paisa.user",
+    paytm: "net.one97.paytm",
+    bhim: "in.org.npci.upiapp",
   };
 
   const payload: NotificationPayload = {
     packageName: packageMap[source],
-    title: 'Payment Received',
-    text: `₹${amount.toLocaleString('en-IN')} received from Test User`,
+    title: "Payment Received",
+    text: `₹${amount.toLocaleString("en-IN")} received from Test User`,
     timestamp: Date.now(),
   };
 
@@ -361,13 +353,13 @@ export async function simulateNotification(
 
 /**
  * Tests the TTS with a specific amount and language.
- * 
+ *
  * @param amount - Amount to speak
  * @param language - Language to use
  */
 export async function testAnnouncement(
   amount: number,
-  language: Language
+  language: Language,
 ): Promise<void> {
   await speakAmount(amount, language);
 }
@@ -379,19 +371,19 @@ export async function testAnnouncement(
 /**
  * React hook for using the Soundbox service.
  * Manages service lifecycle and provides status information.
- * 
+ *
  * @example
  * ```typescript
  * function SoundboxScreen() {
- *   const { 
- *     isEnabled, 
- *     start, 
- *     stop, 
+ *   const {
+ *     isEnabled,
+ *     start,
+ *     stop,
  *     lastNotification,
  *     hasPermission,
  *     requestPermission
  *   } = useSoundbox();
- *   
+ *
  *   return (
  *     <View>
  *       <Switch value={isEnabled} onValueChange={v => v ? start() : stop()} />
@@ -406,7 +398,8 @@ export async function testAnnouncement(
 export function useSoundbox() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
-  const [lastNotification, setLastNotification] = useState<ParsedNotification | null>(null);
+  const [lastNotification, setLastNotification] =
+    useState<ParsedNotification | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
 
   // Check permission on mount
@@ -421,7 +414,7 @@ export function useSoundbox() {
   // Handle notification updates
   const handleNotificationUpdate = useCallback((parsed: ParsedNotification) => {
     setLastNotification(parsed);
-    setNotificationCount(prev => prev + 1);
+    setNotificationCount((prev) => prev + 1);
   }, []);
 
   // Start service

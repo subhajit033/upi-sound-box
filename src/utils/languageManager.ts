@@ -1,24 +1,24 @@
 /**
  * Language Preference Manager
- * 
+ *
  * Handles persistence and retrieval of user language preferences
  * using AsyncStorage. Provides a React hook for easy integration.
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCallback, useEffect, useState } from 'react';
-import type { Language } from '../types';
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../types';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback, useEffect, useState } from "react";
+import type { Language } from "../types";
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from "../types";
 
 // ============================================================================
 // CONSTANTS
 // ============================================================================
 
 /** Storage key for language preference */
-const LANGUAGE_STORAGE_KEY = '@upi_soundbox:language';
+const LANGUAGE_STORAGE_KEY = "@upi_soundbox:language";
 
 /** Storage key for all app settings */
-const SETTINGS_STORAGE_KEY = '@upi_soundbox:settings';
+const SETTINGS_STORAGE_KEY = "@upi_soundbox:settings";
 
 // ============================================================================
 // LANGUAGE FUNCTIONS
@@ -27,9 +27,9 @@ const SETTINGS_STORAGE_KEY = '@upi_soundbox:settings';
 /**
  * Retrieves the saved language preference.
  * Returns the default language if no preference is saved or on error.
- * 
+ *
  * @returns The saved language or default ('en-IN')
- * 
+ *
  * @example
  * ```typescript
  * const language = await getLanguage();
@@ -39,15 +39,15 @@ const SETTINGS_STORAGE_KEY = '@upi_soundbox:settings';
 export async function getLanguage(): Promise<Language> {
   try {
     const stored = await AsyncStorage.getItem(LANGUAGE_STORAGE_KEY);
-    
+
     if (stored && isValidLanguage(stored)) {
       return stored as Language;
     }
-    
+
     return DEFAULT_LANGUAGE;
   } catch (error) {
     if (__DEV__) {
-      console.error('Error reading language preference:', error);
+      console.error("Error reading language preference:", error);
     }
     return DEFAULT_LANGUAGE;
   }
@@ -55,10 +55,10 @@ export async function getLanguage(): Promise<Language> {
 
 /**
  * Saves the language preference.
- * 
+ *
  * @param language - The language to save
  * @throws Error if the language is invalid
- * 
+ *
  * @example
  * ```typescript
  * await setLanguage('hi-IN');
@@ -68,12 +68,12 @@ export async function setLanguage(language: Language): Promise<void> {
   if (!isValidLanguage(language)) {
     throw new Error(`Invalid language: ${language}`);
   }
-  
+
   try {
     await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
   } catch (error) {
     if (__DEV__) {
-      console.error('Error saving language preference:', error);
+      console.error("Error saving language preference:", error);
     }
     throw error;
   }
@@ -81,23 +81,26 @@ export async function setLanguage(language: Language): Promise<void> {
 
 /**
  * Validates that a string is a valid Language type.
- * 
+ *
  * @param value - Value to check
  * @returns true if valid language
  */
 export function isValidLanguage(value: string): value is Language {
-  return SUPPORTED_LANGUAGES.some(lang => lang.code === value);
+  return SUPPORTED_LANGUAGES.some((lang) => lang.code === value);
 }
 
 /**
  * Gets the display name for a language code.
- * 
+ *
  * @param language - Language code
  * @param useNative - Whether to return native script name
  * @returns Display name
  */
-export function getLanguageDisplayName(language: Language, useNative: boolean = false): string {
-  const info = SUPPORTED_LANGUAGES.find(l => l.code === language);
+export function getLanguageDisplayName(
+  language: Language,
+  useNative: boolean = false,
+): string {
+  const info = SUPPORTED_LANGUAGES.find((l) => l.code === language);
   if (!info) return language;
   return useNative ? info.nativeName : info.englishName;
 }
@@ -109,16 +112,16 @@ export function getLanguageDisplayName(language: Language, useNative: boolean = 
 /**
  * React hook for managing language preference.
  * Automatically loads the saved preference on mount and persists changes.
- * 
+ *
  * @returns Object containing language state and setter
- * 
+ *
  * @example
  * ```typescript
  * function LanguageSelector() {
  *   const { language, setLanguage, isLoading } = useLanguage();
- *   
+ *
  *   if (isLoading) return <Text>Loading...</Text>;
- *   
+ *
  *   return (
  *     <Picker
  *       selectedValue={language}
@@ -154,7 +157,9 @@ export function useLanguage(): {
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load language'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to load language"),
+          );
         }
       } finally {
         if (mounted) {
@@ -177,7 +182,9 @@ export function useLanguage(): {
       setLanguageState(newLanguage);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to save language'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to save language"),
+      );
       throw err;
     }
   }, []);
@@ -220,23 +227,23 @@ const DEFAULT_SETTINGS: StoredSettings = {
 
 /**
  * Retrieves all app settings.
- * 
+ *
  * @returns Stored settings or defaults
  */
 export async function getSettings(): Promise<StoredSettings> {
   try {
     const stored = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
-    
+
     if (stored) {
       const parsed = JSON.parse(stored) as Partial<StoredSettings>;
       // Merge with defaults to handle missing keys
       return { ...DEFAULT_SETTINGS, ...parsed };
     }
-    
+
     return DEFAULT_SETTINGS;
   } catch (error) {
     if (__DEV__) {
-      console.error('Error reading settings:', error);
+      console.error("Error reading settings:", error);
     }
     return DEFAULT_SETTINGS;
   }
@@ -244,17 +251,19 @@ export async function getSettings(): Promise<StoredSettings> {
 
 /**
  * Saves app settings.
- * 
+ *
  * @param settings - Partial settings to update
  */
-export async function saveSettings(settings: Partial<StoredSettings>): Promise<void> {
+export async function saveSettings(
+  settings: Partial<StoredSettings>,
+): Promise<void> {
   try {
     const current = await getSettings();
     const updated = { ...current, ...settings };
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
     if (__DEV__) {
-      console.error('Error saving settings:', error);
+      console.error("Error saving settings:", error);
     }
     throw error;
   }
@@ -262,7 +271,7 @@ export async function saveSettings(settings: Partial<StoredSettings>): Promise<v
 
 /**
  * React hook for managing all app settings.
- * 
+ *
  * @returns Settings state and update functions
  */
 export function useSettings(): {
@@ -271,7 +280,8 @@ export function useSettings(): {
   isLoading: boolean;
   error: Error | null;
 } {
-  const [settings, setSettingsState] = useState<StoredSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettingsState] =
+    useState<StoredSettings>(DEFAULT_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -288,7 +298,9 @@ export function useSettings(): {
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load settings'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to load settings"),
+          );
         }
       } finally {
         if (mounted) {
@@ -305,16 +317,21 @@ export function useSettings(): {
   }, []);
 
   // Update settings
-  const updateSettings = useCallback(async (updates: Partial<StoredSettings>) => {
-    try {
-      await saveSettings(updates);
-      setSettingsState(prev => ({ ...prev, ...updates }));
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to save settings'));
-      throw err;
-    }
-  }, []);
+  const updateSettings = useCallback(
+    async (updates: Partial<StoredSettings>) => {
+      try {
+        await saveSettings(updates);
+        setSettingsState((prev) => ({ ...prev, ...updates }));
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to save settings"),
+        );
+        throw err;
+      }
+    },
+    [],
+  );
 
   return {
     settings,
@@ -340,7 +357,7 @@ export async function clearAllData(): Promise<void> {
     ]);
   } catch (error) {
     if (__DEV__) {
-      console.error('Error clearing data:', error);
+      console.error("Error clearing data:", error);
     }
     throw error;
   }

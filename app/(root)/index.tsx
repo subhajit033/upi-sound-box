@@ -65,9 +65,9 @@ export default function HomeScreen() {
   const handleNotification = useCallback(
     async (payload: NotificationPayload) => {
       try {
-        if (__DEV__) {
+       
           console.log('Notification received:', payload);
-        }
+       
 
         // Parse the notification
         const parsed = parseNotification(payload);
