@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   DeviceEventEmitter,
+  NativeModules,
   Platform,
   Pressable,
   ScrollView,
@@ -125,6 +126,18 @@ export default function HomeScreen() {
   // ============================================================================
   // EFFECTS
   // ============================================================================
+
+  // Initialize notification listener context on mount
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      const { UPILinkModule } = NativeModules;
+      if (UPILinkModule && UPILinkModule.initializeListener) {
+        UPILinkModule.initializeListener()
+          .then(() => console.log('Notification listener context initialized'))
+          .catch((error: Error) => console.error('Failed to initialize listener:', error));
+      }
+    }
+  }, []);
 
   // Load language preference on mount
   useEffect(() => {

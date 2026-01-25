@@ -20,6 +20,11 @@ import com.facebook.react.bridge.WritableArray
 class UPILinkModule(reactContext: ReactApplicationContext) : 
     ReactContextBaseJavaModule(reactContext) {
 
+    init {
+        // Update the notification listener's context reference whenever this module is initialized
+        UPINotificationListener.reactContext = reactContext
+    }
+
     companion object {
         // Module name exposed to React Native
         private const val MODULE_NAME = "UPILinkModule"
@@ -195,6 +200,23 @@ class UPILinkModule(reactContext: ReactApplicationContext) :
             
         } catch (e: Exception) {
             promise.reject(ERROR_CODE_GENERIC, "Failed to get supported UPI apps: ${e.message}", e)
+        }
+    }
+    
+    /**
+     * Initializes the notification listener context.
+     * Called from JavaScript to ensure context is available.
+     * 
+     * @param promise Resolves with true when context is set
+     */
+    @ReactMethod
+    fun initializeListener(promise: Promise) {
+        try {
+            // Update the static context reference
+            UPINotificationListener.reactContext = reactApplicationContext
+            promise.resolve(true)
+        } catch (e: Exception) {
+            promise.reject(ERROR_CODE_GENERIC, "Failed to initialize listener: ${e.message}", e)
         }
     }
 }

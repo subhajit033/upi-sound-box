@@ -57,6 +57,13 @@ export interface UPILinkModuleInterface extends NativeModule {
    * @returns Promise that resolves to an array of all supported UPI apps
    */
   getSupportedUPIApps(): Promise<UPIAppInfo[]>;
+
+  /**
+   * Initializes the notification listener context.
+   * Should be called when the app starts to ensure notifications can be received.
+   * @returns Promise that resolves to true when initialization is complete
+   */
+  initializeListener(): Promise<boolean>;
 }
 
 declare module 'react-native' {
