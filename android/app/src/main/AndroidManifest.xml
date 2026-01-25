@@ -5,8 +5,8 @@
   <uses-permission android:name="android.permission.BLUETOOTH" />
   <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
   
-  <!-- Remove internet permission - app is fully offline -->
-  <uses-permission android:name="android.permission.INTERNET" tools:node="remove"/>
+  <!-- Internet permission needed for development build to connect to Metro -->
+  <uses-permission android:name="android.permission.INTERNET" />
   
   <!-- Keep existing permissions -->
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>

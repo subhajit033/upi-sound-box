@@ -8,6 +8,7 @@ import com.facebook.react.ReactApplication
 import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.ReactHost
+import com.facebook.react.ReactInstanceEventListener
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
 import com.facebook.react.defaults.DefaultReactNativeHost
@@ -59,9 +60,13 @@ class MainApplication : Application(), ReactApplication {
    * This allows the notification service to emit events to React Native.
    */
   private fun setupReactContextListener() {
-    reactNativeHost.reactInstanceManager.addReactInstanceEventListener { context ->
-      UPINotificationListener.reactContext = context
-    }
+    reactNativeHost.reactInstanceManager.addReactInstanceEventListener(
+      object : ReactInstanceEventListener {
+        override fun onReactContextInitialized(context: ReactContext) {
+          UPINotificationListener.reactContext = context
+        }
+      }
+    )
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {
